@@ -11,7 +11,7 @@ if (empty($config['GITHUB']['CLIENT_SECRET'])) {
   throw new Exception("\$config['GITHUB']['CLIENT_SECRET'] must be defined in config.php");
 }
 $github = new \Github\Client();
-$github->authenticate($config['GITHUB']['CLIENT_ID'], $config['GITHUB']['CLIENT_SECRET'], \Github\Client::AUTH_HTTP_TOKEN);
+$github->authenticate($config['GITHUB']['CLIENT_ID'], $config['GITHUB']['CLIENT_SECRET'], \Github\Client::AUTH_HTTP_PASSWORD);
 
 if (empty($config['TIMEZONE'])) {
   date_default_timezone_set('UTC');
