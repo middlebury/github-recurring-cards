@@ -79,11 +79,11 @@ class Card {
 
       if (!empty($labels)) {
         foreach ($data['labels'] as $label) {
-          $labels = $gitub->api('issue')->labels()->add($data['org'], $data['project'], $issue, $label);
+          $labels = $gitub->api('issue')->labels()->add($data['org'], $data['project'], $issue['id'], $label);
         }
       }
 
-      return $github->api('org_projects')->columns()->cards()->create($data['column'], array('content_type' => 'Issue', 'content_id' => $issue));
+      return $github->api('org_projects')->columns()->cards()->create($data['column'], array('content_type' => 'Issue', 'content_id' => $issue['id']));
     } else {
       return $github->api('org_projects')->columns()->cards()->create($data->data['column']);
     }
