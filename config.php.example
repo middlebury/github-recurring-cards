@@ -1,0 +1,8 @@
+<?php
+
+// Rename to config.php and add your own values.
+
+$config['GITHUB']['CLIENT_ID'] = '';
+$config['GITHUB']['CLIENT_SECRET'] = '';
+
+$config['TIMEZONE'] = 'America/New_York';

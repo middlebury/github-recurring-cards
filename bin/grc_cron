@@ -1,0 +1,145 @@
+#!/usr/bin/env php
+<?php
+
+require_once(dirname(__FILE__)."/../lib/init.php");
+require_once(dirname(__FILE__)."/../lib/ArgumentParser.php");
+
+$usage = "Usage:
+
+  ".$argv[0]." --cron-freq-hours=<hours> [--override-run-time=<DateTime string>]
+
+Options:
+  --cron-freq-hours=<hours> (Required)
+            A positive integer number of hours between cron runs.
+            Used to define the window to match recurrences against.
+
+  --override-run-time=<DateTime string> (Optional)
+            A DateTime string like '2016-03-20 08:03'.
+            Used to test/simulate a cron-run at a different date.
+
+  --test
+            Do not create cards that match, but rather print out information
+            about which cards would be created.
+
+  --print-card-data
+            When --test is specified, also print details about each card.
+
+";
+
+try {
+  $options = getOptionArray(__FILE__, $argv);
+} catch (Exception $e) {
+  fwrite(STDERR, $e->getMessage()."\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+$allowed_options = array(
+  'cron-freq-hours' => true,
+  'override-run-time' => true,
+  'test' => true,
+  'print-card-data' => true,
+);
+$unknown_options = array_diff_key($options, $allowed_options);
+if (count($unknown_options) > 0) {
+  fwrite(STDERR, "Error, unknown options: ".implode(', ', array_keys($unknown_options))."\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+// cron-freq-hours
+if (empty($options['cron-freq-hours'])
+  || filter_var($options['cron-freq-hours'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) === false)
+{
+  fwrite(STDERR, $usage);
+  exit(1);
+} else {
+  $cron_freq_hours = $options['cron-freq-hours'];
+}
+// override-run-time
+if (empty($options['override-run-time'])) {
+  $now = new DateTime();
+} else {
+  try {
+    $now = new DateTime($options['override-run-time']);
+  } catch (Exception $e) {
+    fwrite(STDERR, 'Invalid --override-run-time option: '.$e->getMessage()."\n\n");
+    fwrite(STDERR, $usage);
+    exit(1);
+  }
+}
+// test
+if (empty($options['test'])) {
+  $testing = false;
+  $print_card_data = false;
+} else {
+  $testing = true;
+  $print_card_data = (!empty($options['print-card-data']));
+}
+
+// Backward compatability for PHP < 5.4.
+if (!defined('JSON_PRETTY_PRINT')) {
+  define('JSON_PRETTY_PRINT', 0);
+}
+
+$start = new DateTime($now->format('Y-m-d H:00:00'));
+$end = new DateTime($now->format('Y-m-d H:00:00'));
+$end->add(new DateInterval('PT'.($cron_freq_hours - 1).'H59M59S'));
+
+$template_dir = realpath(dirname(__FILE__)."/../templates");
+$data_dir = realpath(dirname(__FILE__)."/../cards");
+$data_files = scandir($data_dir);
+$num_definitions = 0;
+foreach ($data_files as $file) {
+  if (preg_match('/.+\.json$/i', $file)) {
+    try {
+      // Load the data.
+      $data = json_decode(file_get_contents($data_dir.'/'.$file), true);
+      if (is_null($data)) {
+        throw new Exception("Error decoding json data from $data_dir/$file");
+      }
+      // Add default values from a template.
+      if (!empty($data['templates'])) {
+        if (!is_array($data['templates'])) {
+          throw new Exception('the templates parameter in $data_dir/$file must be empty or an array.');
+        }
+        foreach ($data['templates'] as $template_name) {
+          $template_file = $template_dir.'/'.$template_name.'.json';
+          if (!file_exists($template_file)) {
+            throw new Exception("$data_dir/$file specifies a template '$template_name' that does not exist at $template_file");
+          } else {
+            $template = json_decode(file_get_contents($template_file), true);
+            if (is_null($template)) {
+              throw new Exception("Error decoding json data from $template_file");
+            }
+            foreach ($template as $key => $val) {
+              if (!isset($data[$key])) {
+                $data[$key] = $val;
+              }
+            }
+          }
+        }
+      }
+      // Check the card.
+      $card = new \GithubRecurringCards\Card($data);
+      $num_definitions++;
+      if ($card->recurrsBetween($start, $end)) {
+        if ($testing) {
+          print "Add card from: $file\n";
+          if ($print_card_data) {
+            print "\t".rtrim(str_replace("\n", "\n\t", wordwrap(json_encode($card->getData($github), JSON_PRETTY_PRINT), 80, "\n", TRUE)));
+            print "\n";
+          }
+        } else {
+          $card->addToGithub($github);
+        }
+      }
+    } catch (Exception $e) {
+      fwrite(STDERR, "Error checking/adding card defined in $data_dir/$file: ".$e->getMessage()."\n");
+    }
+  }
+}
+
+if (!$num_definitions) {
+  fwrite(STDERR, "No card definitions found in $data_dir/\n");
+  exit(3);
+}
+exit(0);

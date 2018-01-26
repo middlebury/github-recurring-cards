@@ -1,0 +1,99 @@
+#!/usr/bin/env php
+<?php
+
+require_once(dirname(__FILE__)."/../lib/init.php");
+require_once(dirname(__FILE__)."/../lib/ArgumentParser.php");
+
+$usage = "Usage:
+
+  ".$argv[0]." --start-date --end-date --cron-freq-hours=<hours>
+
+Options:
+  --cron-freq-hours=<hours> (Required)
+            A positive integer number of hours between cron runs.
+            Used to define the window to match recurrences against.
+
+  --start-date=<DateTime string> (Optional)
+            A DateTime string like '2016-03-20 08:03'.
+            Beginning date for the simulation run.
+
+  --end-date=<DateTime string> (Optional)
+            A DateTime string like '2016-03-20 08:03'.
+            Ending date for the simulation run.
+
+  --print-card-data
+            Also print details about each card.
+
+";
+
+try {
+  $options = getOptionArray(__FILE__, $argv);
+} catch (Exception $e) {
+  fwrite(STDERR, $e->getMessage()."\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+$allowed_options = array(
+  'cron-freq-hours' => true,
+  'start-date' => true,
+  'end-date' => true,
+  'print-card-data' => true,
+);
+$unknown_options = array_diff_key($options, $allowed_options);
+if (count($unknown_options) > 0) {
+  fwrite(STDERR, "Error, unknown options: ".implode(', ', array_keys($unknown_options))."\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+// cron-freq-hours
+if (empty($options['cron-freq-hours'])
+  || filter_var($options['cron-freq-hours'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) === false)
+{
+  fwrite(STDERR, $usage);
+  exit(1);
+} else {
+  $cron_freq_hours = $options['cron-freq-hours'];
+}
+// start-date
+try {
+  $date = new DateTime($options['start-date']);
+} catch (Exception $e) {
+  fwrite(STDERR, 'Invalid --start-date option: '.$e->getMessage()."\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+// end-date
+try {
+  $end = new DateTime($options['end-date']);
+} catch (Exception $e) {
+  fwrite(STDERR, 'Invalid --end-date option: '.$e->getMessage()."\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+if ($date > $end) {
+  fwrite(STDERR, "Error --start-date is later than --end-date. Nothing to do.\n\n");
+  fwrite(STDERR, $usage);
+  exit(1);
+}
+
+$base_command = dirname(__FILE__).'/grc_cron --test --cron-freq-hours='.$cron_freq_hours;
+if (!empty($options['print-card-data'])) {
+  $base_command .= ' --print-card-data';
+}
+$interval = new DateInterval('PT'.$cron_freq_hours.'H');
+while ($date < $end) {
+  $command = $base_command.' --override-run-time="'.$date->format('Y-m-d H:i:s').'"';
+  $output = array();
+  exec($command, $output, $ret);
+  if ($ret) {
+    fwrite(STDERR, "Error running\n\t$command\nReturn status: $ret\n");
+    fwrite(STDERR, "Output:\n\t".implode("\n\t", $output)."\n");
+    exit(2);
+  }
+  if (!empty($output)) {
+    print $date->format('l, M j, Y H:i')."\n\t";
+    print implode("\n\t", $output);
+    print "\n";
+  }
+  $date->add($interval);
+}
