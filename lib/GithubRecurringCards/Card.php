@@ -85,7 +85,7 @@ class Card {
 
       return $github->api('org_projects')->columns()->cards()->create($data['column'], array('content_type' => 'Issue', 'content_id' => $issue['id']));
     } else {
-      return $github->api('org_projects')->columns()->cards()->create($data->data['column']);
+      return $github->api('org_projects')->columns()->cards()->create($data['column'], array('note' => $data['title']));
     }
   }
 }
