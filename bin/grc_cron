@@ -125,7 +125,7 @@ foreach ($data_files as $file) {
         if ($testing) {
           print "Add card from: $file\n";
           if ($print_card_data) {
-            print "\t".rtrim(str_replace("\n", "\n\t", wordwrap(json_encode($card->getData($github), JSON_PRETTY_PRINT), 80, "\n", TRUE)));
+            print "\t".rtrim(str_replace("\n", "\n\t", wordwrap(json_encode($card->getData(), JSON_PRETTY_PRINT), 80, "\n", TRUE)));
             print "\n";
           }
         } else {

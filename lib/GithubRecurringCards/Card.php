@@ -8,6 +8,9 @@ namespace GithubRecurringCards;
 class Card {
 
   protected static $optional_elements = array(
+    'column',
+    'org',
+    'project',
     'title',
     'body',
     'labels',
@@ -26,11 +29,11 @@ class Card {
     if (empty($data['start_date']) || !preg_match('/^\d\d\d\d-\d\d-\d\d$/', $data['start_date'])) {
       throw new \Exception("start_date must be a valid date string in the YYYY-MM-DD format. ".$data['start_date']." given.");
     }
-    // board
-    if (empty($data['board'])
-      || filter_var($data['board'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 0))) === false)
+    // column
+    if (empty($data['column'])
+      || filter_var($data['column'], FILTER_VALIDATE_INT, array('options' => array('min_range' => 0))) === false)
     {
-      throw new \Exception("board must be an integer between 0 and 23. ".$data['board']." given.");
+      throw new \Exception("column must be an integer. ".$data['column']." given.");
     }
     // recurrence
     if (empty($data['recurrence']) || !preg_match('/FREQ=.+/i', $data['recurrence'])) {
@@ -54,22 +57,7 @@ class Card {
   }
 
   public function addToGithub(\Github\Client $github) {
-    $data = array();
-    foreach (self::$optional_elements as $key) {
-      if (!empty($this->data[$key])) {
-        $data[$key] = $this->data[$key];
-      }
-    }
-    if (!empty($data['subtasks'])) {
-      if (empty($data['body'])) {
-        $data['body'] = '';
-      } else {
-        $data['body'] .= '\n';
-      }
-      foreach ($data['subtasks'] as $title => $task) {
-        $data['body'] .= '[ ]' . $task . '\n';
-      }
-    }
+    $data = $this->getData();
 
     if (!empty($data['project'])) {
       $issue = $github->api('issue')->create($data['org'], $data['project'], array(
@@ -87,5 +75,26 @@ class Card {
     } else {
       return $github->api('org_projects')->columns()->cards()->create($data['column'], array('note' => $data['title']));
     }
+  }
+
+  public function getData() {
+    $data = array();
+    foreach (self::$optional_elements as $key) {
+      if (!empty($this->data[$key])) {
+        $data[$key] = $this->data[$key];
+      }
+    }
+    if (!empty($data['subtasks'])) {
+      if (empty($data['body'])) {
+        $data['body'] = '';
+      } else {
+        $data['body'] .= "\n";
+      }
+      foreach ($data['subtasks'] as $task) {
+        $data['body'] .= '[ ]' . $task['title'] . "\n";
+      }
+    }
+    print $data['body'];
+    return $data;
   }
 }
