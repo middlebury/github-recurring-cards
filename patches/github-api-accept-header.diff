@@ -1,0 +1,13 @@
+diff --git a/lib/Github/Api/AcceptHeaderTrait.php b/lib/Github/Api/AcceptHeaderTrait.php
+index 4a7e7a4..edfdebb 100644
+--- a/lib/Github/Api/AcceptHeaderTrait.php
++++ b/lib/Github/Api/AcceptHeaderTrait.php
+@@ -9,7 +9,7 @@ namespace Github\Api;
+  */
+ trait AcceptHeaderTrait
+ {
+-    protected $acceptHeaderValue = null;
++    protected $acceptHeaderValue = 'application/vnd.github.inertia-preview+json';
+ 
+     protected function get($path, array $parameters = [], array $requestHeaders = [])
+     {

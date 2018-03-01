@@ -23,10 +23,6 @@ Installation
 
 5. Copy the `config.php.example` file to `config.php` and configure your values.
 
-6. Manually edit vendor/knplabs/github-api/lib/Github/Api/AcceptHeaderTrait.php to read
-
-      protected $acceptHeaderValue = 'application/vnd.github.inertia-preview+json';
-
 Usage
 =====
 
