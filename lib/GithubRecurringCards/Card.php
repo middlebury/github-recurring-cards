@@ -65,9 +65,9 @@ class Card {
         'body' => $data['body'],
       ));
 
-      if (!empty($labels)) {
-        foreach ($data['labels'] as $label) {
-          $labels = $gitub->api('issue')->labels()->add($data['org'], $data['project'], $issue['id'], $label);
+      if (!empty($data['labels'])) {
+        foreach (explode(',', $data['labels']) as $name) {
+          $labels = $github->api('issue')->labels()->add($data['org'], $data['project'], $issue['number'], $name);
         }
       }
 
