@@ -91,7 +91,7 @@ class Card {
         $data['body'] .= "\n";
       }
       foreach ($data['subtasks'] as $task) {
-        $data['body'] .= '[ ]' . $task['title'] . "\n";
+        $data['body'] .= '- [ ] ' . $task['title'] . "\n";
       }
     }
     print $data['body'];
