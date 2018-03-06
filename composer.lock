@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a6d1209d71eabb0c2cae01f7962fdfee",
+    "content-hash": "e7808ff90978bd9c37698b32a6bae232",
     "packages": [
         {
             "name": "clue/stream-filter",
@@ -386,9 +386,6 @@
             "extra": {
                 "branch-alias": {
                     "dev-master": "2.6.x-dev"
-                },
-                "patches_applied": {
-                    "Issue #676": "patches/github-api-accept-header.diff"
                 }
             },
             "autoload": {
@@ -1041,7 +1038,7 @@
         },
         {
             "name": "symfony/options-resolver",
-            "version": "v3.4.4",
+            "version": "v3.4.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/options-resolver.git",

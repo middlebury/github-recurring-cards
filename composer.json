@@ -4,12 +4,5 @@
         "simshaun/recurr": "^3.0",
         "knplabs/github-api": "^2.7",
         "php-http/guzzle6-adapter": "^1.1"
-    },
-    "extra": {
-        "patches": {
-            "knplabs/github-api": {
-                "Issue #676": "patches/github-api-accept-header.diff"
-            }
-        }
     }
 }

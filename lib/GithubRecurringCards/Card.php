@@ -59,6 +59,9 @@ class Card {
   public function addToGithub(\Github\Client $github) {
     $data = $this->getData();
 
+    // Configure the columns API to ensure the correct headers are sent.
+    $github->api('repo')->projects()->columns()->configure();
+
     if (!empty($data['project'])) {
       $issue = $github->api('issue')->create($data['org'], $data['project'], array(
         'title' => $data['title'],
@@ -71,9 +74,9 @@ class Card {
         }
       }
 
-      return $github->api('org_projects')->columns()->cards()->create($data['column'], array('content_type' => 'Issue', 'content_id' => $issue['id']));
+      return $github->api('org_projects')->columns()->cards()->configure()->create($data['column'], array('content_type' => 'Issue', 'content_id' => $issue['id']));
     } else {
-      return $github->api('org_projects')->columns()->cards()->create($data['column'], array('note' => $data['title']));
+      return $github->api('org_projects')->columns()->cards()->configure()->create($data['column'], array('note' => $data['title']));
     }
   }
 
