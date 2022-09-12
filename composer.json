@@ -4,5 +4,10 @@
         "simshaun/recurr": "^3.0",
         "knplabs/github-api": "^2.7",
         "php-http/guzzle6-adapter": "^1.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "cweagans/composer-patches": true
+        }
     }
 }
